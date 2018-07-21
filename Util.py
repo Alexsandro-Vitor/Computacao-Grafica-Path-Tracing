@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 import numpy as np
-import numpy.linalg as alg
+import numpy.linalg as LA
 import cv2
 import functools
 import math
@@ -22,9 +22,9 @@ def normalize_w(v):
 	if eq(v[3], 0):
 		return normalize(v)
 	else:
-		return list(map(lambda x: x/v[3], v))
+		return [v[0] / v[3], v[1] / v[3], v[2] / v[3], 1]
 
-def distancia_pontos(a, b):
+def distance(a, b):
 	'''Distância entre 2 pontos.'''
 	return magnitude(np.subtract(a, b))
 
@@ -34,10 +34,10 @@ def cross_3d(a, b, c):
 	j = np.array([[a[2], a[3], a[0]], [b[2], b[3], b[0]], [c[2], c[3], c[0]]])
 	k = np.array([[a[3], a[0], a[1]], [b[3], b[0], b[1]], [c[3], c[0], c[1]]])
 	l = np.array([a[:-1], b[:-1], c[:-1]])
-	return [alg.det(i), -alg.det(j), alg.det(k), -alg.det(l)]
+	return [LA.det(i), -LA.det(j), LA.det(k), -LA.det(l)]
 
 def row_points_planes(a, b):
-	'''Converte uma reta P3 representada por 2 pontos em sua representação por 2 retas. Também faz o inverso (mas não gera necessariamente os valores anteriores.'''
+	'''Converte uma reta P3 representada por 2 pontos em sua representação por 2 retas. Também faz o inverso (mas não gera necessariamente os valores anteriores).'''
 	a = normalize_w(a)
 	b =	normalize_w(b)
 	if eq(a[0], b[0]) and eq(a[1], b[1]):
@@ -47,24 +47,30 @@ def row_points_planes(a, b):
 	return (normalize_w(planeA), normalize_w(planeB))
 
 def triangle_area(a, b, c):
-	'''Obtem a área de um triângulo'''
-	ba = np.subtract(b, a)
-	ca = np.subtract(c, a)
-	return magnitude(np.cross(ba, ca)) / 2
+	'''Obtem a área de um triângulo, usando a fórmula de Heron.'''
+	ab = distance(a, b)
+	bc = distance(b, c)
+	ca = distance(c, a)
+	p = (ab + bc + ca) / 2
+	return math.sqrt(p * (p - ab) * (p - bc) * (p - ca))
 
-def inside_triangle_area(a, b, c, p):
-	'''Checa se um ponto está em um triângulo através de sua área'''
-	return eq(triangle_area(a, b, c), triangle_area(p, b, c) + triangle_area(a, p, c) + triangle_area(a, b, p))
-
-def inside_triangle_dot(a, b, c, p):
-	'''Não sei se funciona, nem se é mais rápido'''
-	ab = normalize(np.subtract(a, b))
-	bc = normalize(np.subtract(b, c))
-	ca = normalize(np.subtract(c, a))
-	pa = normalize(np.subtract(p, a))
-	pb = normalize(np.subtract(p, b))
-	pc = normalize(np.subtract(p, c))
-	return -np.dot(ca, ab) > np.dot(ca, pa) and -np.dot(ca, ab) > -np.dot(pa, ab) and -np.dot(ab, bc) > np.dot(ab, pb) and -np.dot(ab, bc) > -np.dot(pb, bc) and -np.dot(bc, ca) > np.dot(ab, pc) and -np.dot(bc, ca) > -np.dot(pc, ca)
+def inside_triangle(a, b, c, p):
+	'''Checa se um ponto está em um triângulo através de sua área (fórmula de Heron).'''
+	ab = distance(a, b)
+	bc = distance(b, c)
+	ca = distance(c, a)
+	pa = distance(p, a)
+	pb = distance(p, b)
+	pc = distance(p, c)
+	hP = (ab + bc + ca) / 2
+	abcA = math.sqrt(hP * (hP - ab) * (hP - bc) * (hP - ca))
+	hP = (pb + bc + pc) / 2
+	pbcA = math.sqrt(hP * (hP - pb) * (hP - bc) * (hP - pc))
+	hP = (pa + pc + ca) / 2
+	apcA = math.sqrt(hP * (hP - pa) * (hP - pc) * (hP - ca))
+	hP = (ab + pb + pa) / 2
+	abpA = math.sqrt(hP * (hP - ab) * (hP - pb) * (hP - pa))
+	return eq(abcA, pbcA + apcA + abpA)
 
 def to_opencv(img):
 	'''Como o opencv usa (y, x) como ordem das coordenadas e [blue, green, red] como ordem das cores, essa função é usada para converter uma matriz mais "convencional" ara o formato do opencv.'''

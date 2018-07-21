@@ -85,7 +85,7 @@ class Scene:
 				# print(point)
 				
 				tempTime = time.time()
-				if Util.inside_triangle_area(test1[:-1], test2[:-1], test3[:-1], point):
+				if Util.inside_triangle(test1[:-1], test2[:-1], test3[:-1], point):
 					img[x, y, :] = [255, 255, 255]
 				triangleTime += time.time() - tempTime
 		
