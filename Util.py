@@ -46,6 +46,26 @@ def row_points_planes(a, b):
 	planeB = cross_3d(a, b, planeA)
 	return (normalize_w(planeA), normalize_w(planeB))
 
+def triangle_area(a, b, c):
+	'''Obtem a área de um triângulo'''
+	ba = np.subtract(b, a)
+	ca = np.subtract(c, a)
+	return magnitude(np.cross(ba, ca)) / 2
+
+def inside_triangle_area(a, b, c, p):
+	'''Checa se um ponto está em um triângulo através de sua área'''
+	return eq(triangle_area(a, b, c), triangle_area(p, b, c) + triangle_area(a, p, c) + triangle_area(a, b, p))
+
+def inside_triangle_dot(a, b, c, p):
+	'''Não sei se funciona, nem se é mais rápido'''
+	ab = normalize(np.subtract(a, b))
+	bc = normalize(np.subtract(b, c))
+	ca = normalize(np.subtract(c, a))
+	pa = normalize(np.subtract(p, a))
+	pb = normalize(np.subtract(p, b))
+	pc = normalize(np.subtract(p, c))
+	return -np.dot(ca, ab) > np.dot(ca, pa) and -np.dot(ca, ab) > -np.dot(pa, ab) and -np.dot(ab, bc) > np.dot(ab, pb) and -np.dot(ab, bc) > -np.dot(pb, bc) and -np.dot(bc, ca) > np.dot(ab, pc) and -np.dot(bc, ca) > -np.dot(pc, ca)
+
 def to_opencv(img):
 	'''Como o opencv usa (y, x) como ordem das coordenadas e [blue, green, red] como ordem das cores, essa função é usada para converter uma matriz mais "convencional" ara o formato do opencv.'''
 	r,g,b = cv2.split(img)
