@@ -83,8 +83,9 @@ def to_opencv(img):
 	return cv2.merge((b,g,r))
 
 def showimg(title, img):
-	'''Como o opencv usa (y, x) como ordem das coordenadas e [blue, green, red] como ordem das cores, essa função é usada para visualizar uma matriz mais "convencional" como uma imagem do opencv.'''
+	'''Ajusta para o sistema de coordenadas do opencv e exibe a imagem na tela.'''
 	cv2.imshow(title, to_opencv(img))
 
 def writeimg(name, img):
+	'''Ajusta para o sistema de coordenadas do opencv e escreve a imagem.'''
 	cv2.imwrite(name, to_opencv(img))

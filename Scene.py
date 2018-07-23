@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 import numpy as np
+import math
 import Object
 import Util
 
@@ -59,62 +60,56 @@ class Scene:
 		return output
 	
 	def trace_path(self, x, y):
+		'''Traça um raio correspondente às coordenadas x e y da tela.'''
 		# Planos gerados do raio da camera
-			tempTime = time.time()
-			planes = Util.row_points_planes(self.eye, self.vectors[x, y, :])
-			self.planeTime += time.time() - tempTime
-			# print(planes)
-			
-			for solid in self.object:
-				solidObj = solid[0]
-				for i in range(len(solidObj.triangle)):
-					tempTime = time.time()
-					point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], solidObj.n[i]))
-					self.pointTime += time.time() - tempTime
-					
-					tempTime = time.time()
-					if Util.inside_triangle(solidObj.triangle[i], point):
-						self.img[x, y, :] = [int(255 * v) for v in solid[1:4]]
-					self.triangleTime += time.time() - tempTime
-			
-			for light in self.light:
-				lightObj = light[0]
-				for i in range(len(lightObj.triangle)):
-					tempTime = time.time()
-					point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], lightObj.n[i]))
-					self.pointTime += time.time() - tempTime
-					
-					tempTime = time.time()
-					if Util.inside_triangle(lightObj.triangle[i], point):
-						self.img[x, y, :] = [int(255 * v) for v in light[1:4]]
-					self.triangleTime += time.time() - tempTime
-			
-			print([x, y])
+		planes = Util.row_points_planes(self.eye, self.vectors[x, y, :])
+		# print(planes)
+		
+		# Objeto mais próximo que colidiu com raio e distância
+		minDist = math.inf
+		hitObj = None
+		
+		# Colisões com sólidos
+		for solid in self.object:
+			solidObj = solid[0]
+			for i in range(len(solidObj.triangle)):
+				point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], solidObj.n[i]))
+				
+				if Util.inside_triangle(solidObj.triangle[i], point):
+					if Util.distance(self.eye, point) < minDist:
+						hitObj = solid
+						minDist = Util.distance(self.eye, point)
+					# self.img[x, y, :] = [int(255 * v) for v in solid[1:4]]
+		
+		
+		# Colisões com luzes
+		for light in self.light:
+			lightObj = light[0]
+			for i in range(len(lightObj.triangle)):
+				point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], lightObj.n[i]))
+				
+				if Util.inside_triangle(lightObj.triangle[i], point):
+					if Util.distance(self.eye, point) < minDist:
+						hitObj = light
+						minDist = Util.distance(self.eye, point)
+		
+		# Ilumina com a cor do objeto mais próximo
+		if (hitObj != None):
+			self.img[x, y, :] = [int(255 * v) for v in hitObj[1:4]]
+		
+		print(x)
 	
 	def path_tracing(self):
 		'''O código do path tracing vai aqui.'''
 		self.img = np.zeros([self.size[0], self.size[1], 3])
-		tempTime = time.time()
+		print(self.img)
 		self.vectors = self.gen_ray_vectors()
-		print("Obter pontos:", time.time() - tempTime)
 		
-		test1 = [1, 0, -2, 1]
-		test2 = [-1, 0, -1, 1]
-		test3 = [0, 1, -1, 1]
-		testtriangle = Util.cross_3d(test1, test2, test3)
-		
-		self.planeTime = 0
-		self.pointTime = 0
-		self.triangleTime = 0
-		
-		print(self.light[0][0])
+		totalTime = time.time()
 		
 		for x, y in np.ndindex((self.size[0], self.size[1])):
 			self.trace_path(x, y)
 		
-		print("Geração de planos", self.planeTime)
-		print("Checagem de interseções", self.pointTime)
-		print("Checagem de triangulos", self.triangleTime)
-		print("Execução total", self.planeTime + self.pointTime + self.triangleTime)
+		print("Execução total", time.time() - totalTime)
 		
 		return self.img
