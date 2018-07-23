@@ -15,7 +15,7 @@ def magnitude(v):
 def normalize(v):
 	'''Normaliza um vetor.'''
 	magnitudeV = magnitude(v)
-	return list(map(lambda x: x/magnitudeV, v))
+	return [x / magnitudeV for x in v]
 
 def normalize_w(v):
 	'''Iguala o atributo w de um vetor P3 a 1 e escala os demais atributos proporcionalmente. Caso w == 0, faz a normalização convencional.'''
@@ -54,22 +54,24 @@ def triangle_area(a, b, c):
 	p = (ab + bc + ca) / 2
 	return math.sqrt(p * (p - ab) * (p - bc) * (p - ca))
 
-def inside_triangle(a, b, c, p):
+def inside_triangle(t, p):
 	'''Checa se um ponto está em um triângulo através de sua área (fórmula de Heron).'''
-	ab = distance(a, b)
-	bc = distance(b, c)
-	ca = distance(c, a)
-	pa = distance(p, a)
-	pb = distance(p, b)
-	pc = distance(p, c)
+	if eq(p[3], 0):
+		return False
+	ab = distance(t[0], t[1])
+	bc = distance(t[1], t[2])
+	ca = distance(t[2], t[0])
+	pa = distance(p, t[0])
+	pb = distance(p, t[1])
+	pc = distance(p, t[2])
 	hP = (ab + bc + ca) / 2
-	abcA = math.sqrt(hP * (hP - ab) * (hP - bc) * (hP - ca))
+	abcA = math.sqrt(abs(hP * (hP - ab) * (hP - bc) * (hP - ca)))
 	hP = (pb + bc + pc) / 2
-	pbcA = math.sqrt(hP * (hP - pb) * (hP - bc) * (hP - pc))
+	pbcA = math.sqrt(abs(hP * (hP - pb) * (hP - bc) * (hP - pc)))
 	hP = (pa + pc + ca) / 2
-	apcA = math.sqrt(hP * (hP - pa) * (hP - pc) * (hP - ca))
+	apcA = math.sqrt(abs(hP * (hP - pa) * (hP - pc) * (hP - ca)))
 	hP = (ab + pb + pa) / 2
-	abpA = math.sqrt(hP * (hP - ab) * (hP - pb) * (hP - pa))
+	abpA = math.sqrt(abs(hP * (hP - ab) * (hP - pb) * (hP - pa)))
 	return eq(abcA, pbcA + apcA + abpA)
 
 def to_opencv(img):

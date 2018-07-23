@@ -39,8 +39,8 @@ object floor.obj 1.0 1.0 1.0 0.3 0.7 0 0 5
 # back wall WHITE
 object back.obj 1.0 1.0 1.0 0.3 0.7 0 0 5
 
-# ceiling WHITE
-object ceiling.obj 1.0 1.0 1.0 0.3 0.7 0 0 5
+# ceiling BLUE
+object ceiling.obj 0.0 0.0 1.0 0.3 0.7 0 0 5
 
 # cube 1 WHITE
 object cube1.obj 1.0 1.0 1.0 0.3 0.7 0 0 5

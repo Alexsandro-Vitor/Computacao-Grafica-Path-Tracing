@@ -71,7 +71,10 @@ class Scene:
 		testtriangle = Util.cross_3d(test1, test2, test3)
 		
 		planeTime = 0
+		pointTime = 0
 		triangleTime = 0
+		
+		print(self.light[0][0])
 		
 		for x in range(self.size[0]):
 			for y in range(self.size[1]):
@@ -81,15 +84,38 @@ class Scene:
 				planeTime += time.time() - tempTime
 				# print(planes)
 				
-				point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], testtriangle))[:-1]
-				# print(point)
+				# Distancia do olho ao objeto mais proximo
+				zValue = inf
 				
-				tempTime = time.time()
-				if Util.inside_triangle(test1[:-1], test2[:-1], test3[:-1], point):
-					img[x, y, :] = [255, 255, 255]
-				triangleTime += time.time() - tempTime
+				for solid in self.object:
+					solidObj = solid[0]
+					for i in range(len(solidObj.triangle)):
+						tempTime = time.time()
+						point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], solidObj.n[i]))
+						pointTime += time.time() - tempTime
+						
+						tempTime = time.time()
+						if Util.inside_triangle(solidObj.triangle[i], point):
+							img[x, y, :] = [int(255 * v) for v in solid[1:4]]
+						triangleTime += time.time() - tempTime
+				
+				for light in self.light:
+					lightObj = light[0]
+					for i in range(len(lightObj.triangle)):
+						tempTime = time.time()
+						point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], lightObj.n[i]))
+						pointTime += time.time() - tempTime
+						
+						tempTime = time.time()
+						if Util.inside_triangle(lightObj.triangle[i], point):
+							img[x, y, :] = [int(255 * v) for v in light[1:4]]
+						triangleTime += time.time() - tempTime
+				
+				print([x, y])
 		
 		print("Geração de planos", planeTime)
+		print("Checagem de interseções", pointTime)
 		print("Checagem de triangulos", triangleTime)
+		print("Execução total", planeTime + pointTime + triangleTime)
 		
 		return img

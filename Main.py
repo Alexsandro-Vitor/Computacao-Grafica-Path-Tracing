@@ -1,6 +1,9 @@
 # -*- encoding: utf-8 -*-
 import numpy as np
 import cv2
+import random
+import time
+
 from tkinter.filedialog import askopenfilename
 
 import Scene
