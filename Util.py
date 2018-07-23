@@ -74,6 +74,28 @@ def inside_triangle(t, p):
 	abpA = math.sqrt(abs(hP * (hP - ab) * (hP - pb) * (hP - pa)))
 	return eq(abcA, pbcA + apcA + abpA)
 
+def reflex_diffuse(Ip, kd, L, N):
+	'''Reflexão difusa (NÃO TESTADO)'''
+	return Ip * kd * np.dot(L, N)
+
+def int_pow(b, e):
+	'''Potenciação com expoente inteiro (NÃO TESTADO)'''
+	if e == 0:
+		return 1
+	if e % 2:
+		return b * int_pow(b * b, e // 2)
+	else:
+		return int_pow(b * b, e // 2)
+
+def reflex_specular(Ip, ks, L, N, V, n):
+	'''Reflexão especular, com half vector (NÃO TESTADO)'''
+	h = normalize(np.add(L, V))
+	return Ip * ks * int_pow(np.dot(N, h), n)
+
+def reflex_ambient(Ia, ka):
+	'''Reflexão ambiente (NÃO TESTADO)'''
+	return Ia * ka
+
 def to_opencv(img):
 	'''Como o opencv usa (y, x) como ordem das coordenadas e [blue, green, red] como ordem das cores, essa função é usada para converter uma matriz mais "convencional" ara o formato do opencv.'''
 	r,g,b = cv2.split(img)
