@@ -58,11 +58,44 @@ class Scene:
 				output[x, y, :] = self.scale_screen_camera(x, y)
 		return output
 	
+	def trace_path(self, x, y):
+		# Planos gerados do raio da camera
+			tempTime = time.time()
+			planes = Util.row_points_planes(self.eye, self.vectors[x, y, :])
+			self.planeTime += time.time() - tempTime
+			# print(planes)
+			
+			for solid in self.object:
+				solidObj = solid[0]
+				for i in range(len(solidObj.triangle)):
+					tempTime = time.time()
+					point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], solidObj.n[i]))
+					self.pointTime += time.time() - tempTime
+					
+					tempTime = time.time()
+					if Util.inside_triangle(solidObj.triangle[i], point):
+						self.img[x, y, :] = [int(255 * v) for v in solid[1:4]]
+					self.triangleTime += time.time() - tempTime
+			
+			for light in self.light:
+				lightObj = light[0]
+				for i in range(len(lightObj.triangle)):
+					tempTime = time.time()
+					point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], lightObj.n[i]))
+					self.pointTime += time.time() - tempTime
+					
+					tempTime = time.time()
+					if Util.inside_triangle(lightObj.triangle[i], point):
+						self.img[x, y, :] = [int(255 * v) for v in light[1:4]]
+					self.triangleTime += time.time() - tempTime
+			
+			print([x, y])
+	
 	def path_tracing(self):
 		'''O código do path tracing vai aqui.'''
-		img = np.zeros([self.size[0], self.size[1], 3])
+		self.img = np.zeros([self.size[0], self.size[1], 3])
 		tempTime = time.time()
-		vectors = self.gen_ray_vectors()
+		self.vectors = self.gen_ray_vectors()
 		print("Obter pontos:", time.time() - tempTime)
 		
 		test1 = [1, 0, -2, 1]
@@ -70,52 +103,18 @@ class Scene:
 		test3 = [0, 1, -1, 1]
 		testtriangle = Util.cross_3d(test1, test2, test3)
 		
-		planeTime = 0
-		pointTime = 0
-		triangleTime = 0
+		self.planeTime = 0
+		self.pointTime = 0
+		self.triangleTime = 0
 		
 		print(self.light[0][0])
 		
-		for x in range(self.size[0]):
-			for y in range(self.size[1]):
-				# Planos gerados do raio da camera
-				tempTime = time.time()
-				planes = Util.row_points_planes(self.eye, vectors[x, y, :])
-				planeTime += time.time() - tempTime
-				# print(planes)
-				
-				# Distancia do olho ao objeto mais proximo
-				zValue = inf
-				
-				for solid in self.object:
-					solidObj = solid[0]
-					for i in range(len(solidObj.triangle)):
-						tempTime = time.time()
-						point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], solidObj.n[i]))
-						pointTime += time.time() - tempTime
-						
-						tempTime = time.time()
-						if Util.inside_triangle(solidObj.triangle[i], point):
-							img[x, y, :] = [int(255 * v) for v in solid[1:4]]
-						triangleTime += time.time() - tempTime
-				
-				for light in self.light:
-					lightObj = light[0]
-					for i in range(len(lightObj.triangle)):
-						tempTime = time.time()
-						point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], lightObj.n[i]))
-						pointTime += time.time() - tempTime
-						
-						tempTime = time.time()
-						if Util.inside_triangle(lightObj.triangle[i], point):
-							img[x, y, :] = [int(255 * v) for v in light[1:4]]
-						triangleTime += time.time() - tempTime
-				
-				print([x, y])
+		for x, y in np.ndindex((self.size[0], self.size[1])):
+			self.trace_path(x, y)
 		
-		print("Geração de planos", planeTime)
-		print("Checagem de interseções", pointTime)
-		print("Checagem de triangulos", triangleTime)
-		print("Execução total", planeTime + pointTime + triangleTime)
+		print("Geração de planos", self.planeTime)
+		print("Checagem de interseções", self.pointTime)
+		print("Checagem de triangulos", self.triangleTime)
+		print("Execução total", self.planeTime + self.pointTime + self.triangleTime)
 		
-		return img
+		return self.img
