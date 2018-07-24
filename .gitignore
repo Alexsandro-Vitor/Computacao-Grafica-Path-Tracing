@@ -105,3 +105,6 @@ venv.bak/
 
 # Específico do trabalho
 *.png
+*.bmp
+*.jpg
+*.jpeg

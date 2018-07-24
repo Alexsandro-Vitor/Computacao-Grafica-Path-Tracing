@@ -113,6 +113,7 @@ class Scene:
 					else:
 						# Ambiente
 						colors[path] += np.dot(hitObj[1:4], self.ambient * hitObj[4])
+						
 						kChoice = random.random() * np.sum(hitObj[5:8])
 						# Difuso
 						if kChoice < hitObj[5]:

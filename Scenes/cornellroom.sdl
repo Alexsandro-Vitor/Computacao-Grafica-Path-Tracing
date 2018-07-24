@@ -49,4 +49,4 @@ object cube1.obj 1.0 1.0 0.0 0.3 0.7 0 0 5
 # cube 2 MAGENTA
 object cube2.obj 1.0 0.0 1.0 0.3 0.7 0 0 5
 
-output cornell.png
+output cornell.bmp
