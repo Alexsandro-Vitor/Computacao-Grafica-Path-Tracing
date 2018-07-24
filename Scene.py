@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 import numpy as np
 import math
+import random
 import Object
 import Util
 
@@ -25,20 +26,20 @@ class Scene:
 				elif line[0] == "background":
 					self.background = list(map(float, line[1:]))
 				elif line[0] == "ambient":
-					self.ambient = line[1]
+					self.ambient = float(line[1])
 				elif line[0] == "light":
 					newLight = [Object.Object("Objects/" + line[1])]
-					newLight.extend(list(map(float, line[2:])))
+					newLight.extend([float(i)*float(line[-1]) for i in line[2:-1]])
 					self.light.append(newLight)
 				elif line[0] == "npaths":
-					self.npaths = line[1]
+					self.npaths = int(line[1])
 				elif line[0] == "tonemapping":
-					self.tonemapping = line[1]
+					self.tonemapping = float(line[1])
 				elif line[0] == "seed":
-					self.seed = line[1]
+					self.seed = int(line[1])
 				elif line[0] == "object":
 					newObject = [Object.Object("Objects/" + line[1])]
-					newObject.extend(list(map(float, line[2:])))
+					newObject.extend([float(i) for i in line[2:]])
 					self.object.append(newObject)
 	
 	def __str__(self):
@@ -65,46 +66,64 @@ class Scene:
 		planes = Util.row_points_planes(self.eye, self.vectors[x, y, :])
 		# print(planes)
 		
-		# Objeto mais próximo que colidiu com raio e distância
-		minDist = math.inf
-		hitObj = None
+		for reflex in range(3):
 		
-		# Colisões com sólidos
-		for solid in self.object:
-			solidObj = solid[0]
-			for i in range(len(solidObj.triangle)):
-				point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], solidObj.n[i]))
-				
-				if Util.inside_triangle(solidObj.triangle[i], point):
-					if Util.distance(self.eye, point) < minDist:
-						hitObj = solid
-						minDist = Util.distance(self.eye, point)
-					# self.img[x, y, :] = [int(255 * v) for v in solid[1:4]]
-		
-		
-		# Colisões com luzes
-		for light in self.light:
-			lightObj = light[0]
-			for i in range(len(lightObj.triangle)):
-				point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], lightObj.n[i]))
-				
-				if Util.inside_triangle(lightObj.triangle[i], point):
-					if Util.distance(self.eye, point) < minDist:
-						hitObj = light
-						minDist = Util.distance(self.eye, point)
-		
-		# Ilumina com a cor do objeto mais próximo
-		if (hitObj != None):
-			self.img[x, y, :] = [int(255 * v) for v in hitObj[1:4]]
+			# Objeto mais próximo que colidiu com raio e distância
+			minDist = math.inf
+			hitObj = None
+			hitLight = False
+			
+			# Colisões com sólidos
+			for solid in self.object:
+				solidObj = solid[0]
+				for i in range(len(solidObj.triangle)):
+					point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], solidObj.n[i]))
+					
+					if Util.inside_triangle(solidObj.triangle[i], point):
+						if Util.distance(self.eye, point) < minDist:
+							hitObj = solid
+							minDist = Util.distance(self.eye, point)
+			
+			# Colisões com luzes
+			for light in self.light:
+				lightObj = light[0]
+				for i in range(len(lightObj.triangle)):
+					point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], lightObj.n[i]))
+					
+					if Util.inside_triangle(lightObj.triangle[i], point):
+						if Util.distance(self.eye, point) < minDist:
+							hitLight = True
+							hitObj = light
+							minDist = Util.distance(self.eye, point)
+			
+			# Ilumina com a cor do objeto mais próximo
+			if (hitObj != None):
+				if hitLight:
+					self.img[x, y, :] = hitObj[1:4]
+					break
+				else:
+					# Ambiente
+					self.img[x, y, :] += np.dot(hitObj[1:4], self.ambient * hitObj[4])
+					# kChoice = random.random() * np.sum(hitObj[5:8])
+					# Difuso
+					# if kChoice < hitObj[5]:
+					# Especular
+					# elif kChoice < hitObj[6] + hitObj[7]:
+					# Transparência
+					# else:
+			else:
+				if reflex == 0:
+					self.img[x, y, :] = self.background
+				break
 		
 		print(x)
 	
 	def path_tracing(self):
 		'''O código do path tracing vai aqui.'''
 		self.img = np.zeros([self.size[0], self.size[1], 3])
-		print(self.img)
 		self.vectors = self.gen_ray_vectors()
 		
+		random.seed(self.seed)
 		totalTime = time.time()
 		
 		for x, y in np.ndindex((self.size[0], self.size[1])):

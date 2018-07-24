@@ -6,9 +6,10 @@
 # do Vinicius 6/12/2005
 
 eye 0.0 0.0 5.7
-size 200 200
+size 100 100
+# size 200 200
 ortho -1 -1 1 1
-background 0.0 0.0 0.0
+background 0.0 1.0 1.0
 ambient 0.5
 
 # Luz branca retangulo no centro do teto
@@ -33,7 +34,7 @@ object leftwall.obj 1.0 0.0 0.0 0.3 0.7 0 0 5
 # right wall GREEN
 object rightwall.obj 0.0 1.0 0.0 0.3 0.7 0 0 5
 
-# floor WHITE
+# floor GRAY
 object floor.obj 0.5 0.5 0.5 0.3 0.7 0 0 5
 
 # back wall WHITE
@@ -42,10 +43,10 @@ object back.obj 1.0 1.0 1.0 0.3 0.7 0 0 5
 # ceiling BLUE
 object ceiling.obj 0.0 0.0 1.0 0.3 0.7 0 0 5
 
-# cube 1 WHITE
+# cube 1 YELLOW
 object cube1.obj 1.0 1.0 0.0 0.3 0.7 0 0 5
 
-# cube 2 WHITE
+# cube 2 MAGENTA
 object cube2.obj 1.0 0.0 1.0 0.3 0.7 0 0 5
 
 output cornell.png
