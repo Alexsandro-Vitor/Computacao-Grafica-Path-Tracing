@@ -92,9 +92,14 @@ def reflex_specular(Ip, ks, L, N, V, n):
 	h = normalize(np.add(L, V))
 	return Ip * ks * int_pow(np.dot(N, h), n)
 
-def reflex_ambient(Ia, ka):
-	'''Reflexão ambiente (NÃO TESTADO)'''
-	return Ia * ka
+def compose_quaternions(q1, q2):
+	output = [q1[0] * q2[0] - np.dot(q1[1], q2[1])]
+	output.extend([np.dot(q1[0], q2[1]) + np.dot(q2[0], q1[1]) + np.cross(q1[1], q2[1])])
+	return output
+
+def rotate(point, q):
+	vxp = np.cross(q[1], point)
+	return np.add(point, 2 * np.add(np.dot(vxp, q[0]), np.cross(q[1], point)))
 
 def to_opencv(img):
 	'''Como o opencv usa (y, x) como ordem das coordenadas e [blue, green, red] como ordem das cores, essa função é usada para converter uma matriz mais "convencional" ara o formato do opencv.'''

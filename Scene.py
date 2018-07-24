@@ -62,61 +62,92 @@ class Scene:
 	
 	def trace_path(self, x, y):
 		'''Traça um raio correspondente às coordenadas x e y da tela.'''
-		# Planos gerados do raio da camera
-		planes = Util.row_points_planes(self.eye, self.vectors[x, y, :])
-		# print(planes)
 		
-		for reflex in range(3):
+		# Cores geradas em cada path
+		colors = np.zeros((self.npaths, 3))
 		
-			# Objeto mais próximo que colidiu com raio e distância
-			minDist = math.inf
-			hitObj = None
-			hitLight = False
+		for path in range(self.npaths):
+			# Planos gerados do raio da camera
+			oldPoint = self.eye
+			planes = Util.row_points_planes(oldPoint, self.vectors[x, y, :])
+			for reflex in range(3):
+				# Objeto mais próximo que colidiu com raio e distância
+				hitLight = False
+				hitObj = None
+				minDist = math.inf
+				hitPoint = None
+				index = None
+				
+				# Colisões com sólidos
+				for solid in self.object:
+					solidObj = solid[0]
+					for i in range(len(solidObj.triangle)):
+						point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], solidObj.n[i]))
+						
+						if Util.inside_triangle(solidObj.triangle[i], point):
+							if Util.distance(self.eye, point) < minDist:
+								hitObj = solid
+								minDist = Util.distance(self.eye, point)
+								hitPoint = point
+								index = i
 			
-			# Colisões com sólidos
-			for solid in self.object:
-				solidObj = solid[0]
-				for i in range(len(solidObj.triangle)):
-					point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], solidObj.n[i]))
-					
-					if Util.inside_triangle(solidObj.triangle[i], point):
-						if Util.distance(self.eye, point) < minDist:
-							hitObj = solid
-							minDist = Util.distance(self.eye, point)
-			
-			# Colisões com luzes
-			for light in self.light:
-				lightObj = light[0]
-				for i in range(len(lightObj.triangle)):
-					point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], lightObj.n[i]))
-					
-					if Util.inside_triangle(lightObj.triangle[i], point):
-						if Util.distance(self.eye, point) < minDist:
-							hitLight = True
-							hitObj = light
-							minDist = Util.distance(self.eye, point)
-			
-			# Ilumina com a cor do objeto mais próximo
-			if (hitObj != None):
-				if hitLight:
-					self.img[x, y, :] = hitObj[1:4]
-					break
+				# Colisões com luzes
+				for light in self.light:
+					lightObj = light[0]
+					for i in range(len(lightObj.triangle)):
+						point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], lightObj.n[i]))
+						
+						if Util.inside_triangle(lightObj.triangle[i], point):
+							if Util.distance(self.eye, point) < minDist:
+								hitLight = True
+								hitObj = light
+								minDist = Util.distance(self.eye, point)
+								hitPoint = point
+								index = i
+				
+				# Ilumina com a cor do objeto mais próximo
+				if (hitObj != None):
+					if hitLight:
+						colors[path] += hitObj[1:4]
+						break
+					else:
+						# Ambiente
+						colors[path] += np.dot(hitObj[1:4], self.ambient * hitObj[4])
+						kChoice = random.random() * np.sum(hitObj[5:8])
+						# Difuso
+						if kChoice < hitObj[5]:
+							normal = hitObj[0].n[index][:-1]
+							if np.dot(normal, np.subtract(oldPoint[:-1], hitPoint[:-1])) < 0:
+								normal = np.dot(normal, -1)
+							# print("v:", np.subtract(oldPoint[:-1], hitPoint[:-1]))
+							# print("normal:", normal)
+							phi = math.acos(math.sqrt(random.random()))
+							theta = math.pi * random.random()
+							q1 = [math.cos(phi / 2), np.dot(np.subtract(hitObj[0].triangle[index][0][:-1], hitPoint[:-1]), math.sin(phi / 2))]
+							# print("q1:", q1)
+							q2 = [math.cos(theta), np.dot(normal, math.sin(theta))]
+							# print("q2:", q2)
+							qComposed = Util.compose_quaternions(q2, q1)
+							# print("qComposed:", qComposed)
+							newVector = Util.normalize(Util.rotate(normal, qComposed))
+							newVector.append(1)
+							# print(newVector)
+							oldPoint = hitPoint
+							planes = Util.row_points_planes(oldPoint, np.add(hitPoint, newVector))
+							# print(planes)
+						# Especular
+						# elif kChoice < hitObj[6] + hitObj[7]:
+						# Transparência
+						# else:
 				else:
-					# Ambiente
-					self.img[x, y, :] += np.dot(hitObj[1:4], self.ambient * hitObj[4])
-					# kChoice = random.random() * np.sum(hitObj[5:8])
-					# Difuso
-					# if kChoice < hitObj[5]:
-					# Especular
-					# elif kChoice < hitObj[6] + hitObj[7]:
-					# Transparência
-					# else:
-			else:
-				if reflex == 0:
-					self.img[x, y, :] = self.background
-				break
+					if reflex == 0:
+						colors[path, :] = self.background
+					break
+			break
 		
 		print(x)
+		
+		return colors[0]
 	
 	def path_tracing(self):
 		'''O código do path tracing vai aqui.'''
@@ -127,7 +158,7 @@ class Scene:
 		totalTime = time.time()
 		
 		for x, y in np.ndindex((self.size[0], self.size[1])):
-			self.trace_path(x, y)
+			self.img[x, y, :] = self.trace_path(x, y)
 		
 		print("Execução total", time.time() - totalTime)
 		
