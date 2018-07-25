@@ -75,11 +75,11 @@ def inside_triangle(t, p):
 	abpA = math.sqrt(abs(hP * (hP - ab) * (hP - pb) * (hP - pa)))
 	return eq(abcA, pbcA + apcA + abpA)
 
-def shadow_rays(light_triangles):
+def shadow_rays(light_triangles, point):
 	x = list(l[0] for l in light_triangles)
 	y = list(l[1] for l in light_triangles)
 	z = list(l[2] for l in light_triangles)
-	retur [uniform(min(x), max(x)), uniform(min(y), max(y)), uniform(min(z), max(z))]
+	retur [uniform(min(x), max(x)) - point[0], uniform(min(y), max(y)) - point[1], uniform(min(z), max(z)) - point[2]]
 
 def reflex_diffuse(Ip, kd, L, N):
 	'''Reflexão difusa (NÃO TESTADO)'''
