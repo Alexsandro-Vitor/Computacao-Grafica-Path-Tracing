@@ -176,6 +176,7 @@ class Scene:
 		# print(x)
 		
 		return colors[0]
+		#return [(float(total) / (self.npaths * 3)) for total in reduce(lambda x, y: [x[0] + y[0], x[1] + y[1], x[2] + y[2]], colors)]
 	
 	def path_tracing(self):
 		'''O código do path tracing vai aqui.'''
