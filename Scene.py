@@ -127,18 +127,7 @@ class Scene:
 							normal = np.dot(normal, -1)
 						# print("v:", np.subtract(oldPoint[:-1], hitPoint[:-1]))
 						# print("normal:", normal)
-						phi = math.acos(math.sqrt(random.random()))
-						theta = math.pi * random.random()
-						q1 = [math.cos(phi / 2), np.dot(np.subtract(hitObj[0].triangle[index][0][:-1], hitPoint[:-1]), math.sin(phi / 2))]
-						# print("q1:", q1)
-						q2 = [math.cos(theta), np.dot(normal, math.sin(theta))]
-						# print("q2:", q2)
-						qComposed = Util.compose_quaternions(q2, q1)
-						# print("qComposed:", qComposed)
-						newVector = Util.normalize(Util.rotate(normal, qComposed))
-						newVector = np.array([newVector[0], newVector[1], newVector[2], 1])
-						# print(newVector)
-						
+												
 						# Shadow ray
 						#chosenLight = random.choice(self.light)
 						#chosenPoint = random.choice(chosenLight[0].v)
@@ -164,6 +153,18 @@ class Scene:
 						
 						
 						# Atualiza essas variáveis somente no final
+						phi = math.acos(math.sqrt(random.random()))
+						theta = math.pi * random.random()
+
+						q1 = [math.cos(phi / 2), np.dot(np.subtract(hitObj[0].triangle[index][0][:-1], hitPoint[:-1]), math.sin(phi / 2))]
+						# print("q1:", q1)
+						q2 = [math.cos(theta), np.dot(normal, math.sin(theta))]
+						# print("q2:", q2)
+						qComposed = Util.compose_quaternions(q2, q1)
+						# print("qComposed:", qComposed)
+						newVector = Util.normalize(Util.rotate(normal, qComposed))
+						newVector = np.array([newVector[0], newVector[1], newVector[2], 1])
+						# print(newVector)
 						oldPoint = hitPoint
 						planes = Util.row_points_planes(oldPoint, np.add(hitPoint, newVector))
 						# print(planes)
@@ -171,18 +172,18 @@ class Scene:
 					if reflex == 0:
 						colors[path, :] = self.background
 					break
-
-			break
+			
+			#break
 		
 		# print(x)
-		
+
 		#return colors[0]
-		
-		r = sum(l[0] for l in colors) / len(colors)
-		g = sum(l[1] for l in colors) / len(colors)
-		b = sum(l[2] for l in colors) / len(colors)
+
+		r = sum(l[0] for l in colors) / (self.npaths * 3)
+		g = sum(l[1] for l in colors) / (self.npaths * 3)
+		b = sum(l[2] for l in colors) / (self.npaths * 3)
 		return [r, g, b]
-	
+		
 	def path_tracing(self):
 		'''O código do path tracing vai aqui.'''
 		self.img = np.zeros([self.size[0], self.size[1], 3])
