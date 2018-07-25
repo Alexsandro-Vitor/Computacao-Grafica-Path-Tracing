@@ -97,7 +97,8 @@ class Scene:
 						minDist = Util.distance(origin, point)
 						hitPoint = point
 						index = i
-				return (hitLight, hitObj, minDist, hitPoint, index)
+		
+		return (hitLight, hitObj, minDist, hitPoint, index)
 
 	def trace_path(self, x, y):
 		'''Traça um raio correspondente às coordenadas x e y da tela.'''
@@ -109,6 +110,7 @@ class Scene:
 			# Planos gerados do raio da camera
 			oldPoint = self.eye
 			planes = Util.row_points_planes(oldPoint, self.vectors[x, y, :])
+			
 			for reflex in range(3):
 				(hitLight, hitObj, minDist, hitPoint, index) = self.check_colisions(oldPoint, planes)
 
@@ -129,13 +131,13 @@ class Scene:
 						# print("normal:", normal)
 												
 						# Shadow ray
-						#chosenLight = random.choice(self.light)
-						#chosenPoint = random.choice(chosenLight[0].v)
-						#shadowRay = Util.normalize(hitPoint[:-1] - chosenPoint[:-1])
+						chosenLight = random.choice(self.light)
+						chosenPoint = random.choice(chosenLight[0].v)
+						shadowRay = Util.normalize(hitPoint[:-1] - chosenPoint[:-1])
 
 						# Falta fazer a função que selecionará as luzes que são vistar pelo ponto
-						chosenLight = self.light[0]
-						shadowRay = Util.shadow_rays(chosenLight[0].v, hitPoint);
+						# chosenLight = self.light[0]
+						# shadowRay = Util.shadow_rays(chosenLight[0].v, hitPoint);
 						
 						# if np.dot(normal, shadowRay) < 0:
 							# shadowRay = np.dot(shadowRay, -1)
