@@ -5,6 +5,7 @@ import numpy.linalg as LA
 import functools
 import math
 from random import uniform
+from functools import reduce
 
 def eq(a, b):
 	return abs(a - b) < 0.000001
@@ -79,7 +80,7 @@ def shadow_rays(light_triangles, point):
 	x = list(l[0] for l in light_triangles)
 	y = list(l[1] for l in light_triangles)
 	z = list(l[2] for l in light_triangles)
-	retur [uniform(min(x), max(x)) - point[0], uniform(min(y), max(y)) - point[1], uniform(min(z), max(z)) - point[2]]
+	return [uniform(min(x), max(x)) - point[0], uniform(min(y), max(y)) - point[1], uniform(min(z), max(z)) - point[2]]
 
 def reflex_diffuse(Ip, kd, L, N):
 	'''Reflexão difusa (NÃO TESTADO)'''
@@ -103,12 +104,17 @@ def reflex_specular(Ip, ks, L, N, V, n):
 
 def compose_quaternions(q1, q2):
 	output = [q1[0] * q2[0] - np.dot(q1[1], q2[1])]
-	output.append([a + b + c for a, b, c in zip(np.dot(q2[1], q1[0]), np.dot(q1[1], q2[0]), np.cross(q1[1], q2[1]))])
+	a = np.dot(q1[0], q2[1])
+	b = np.dot(q2[0], q1[1])
+	c = np.cross(q1[1], q2[1])
+	output.append(reduce(lambda x, y: [x[0] + y[0], x[1] + y[1], x[2] + y[2]], [a,b,c]))
 	return output
 
 def rotate(point, q):
-	vxp = np.cross(q[1], point)
-	return [a + 2 * (b + c) for a, b, c in zip(point, np.dot(vxp, q[0]), np.cross(q[1], point))]
+	a = np.subtract(np.dot(int_pow(q[0], 2), point), np.dot(np.dot(q[1], q[1]), point))
+	b = 2 * np.dot(np.dot(q[1], point), q[1])
+	c = 2 * np.dot(q[0], np.cross(q[1], point))
+	return reduce(lambda x, y: [x[0] + y[0], x[1] + y[1], x[2] + y[2]], [a,b,c])
 
 def to_opencv(img):
 	'''Como o opencv usa (y, x) como ordem das coordenadas e [blue, green, red] como ordem das cores, essa função é usada para converter uma matriz mais "convencional" ara o formato do opencv.'''
