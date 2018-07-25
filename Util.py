@@ -1,18 +1,12 @@
 # -*- encoding: utf-8 -*-
+import cv2
 import numpy as np
 import numpy.linalg as LA
-import cv2
 import functools
 import math
 
 def eq(a, b):
 	return abs(a - b) < 0.000001
-
-def prod_vector_scalar(v, i):
-	return [i * x for x in v]
-
-def prod_r3_r3(a, b):
-	return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
 
 def magnitude(v):
 	'''A norma de um vetor.'''
@@ -20,19 +14,19 @@ def magnitude(v):
 
 def normalize(v):
 	'''Normaliza um vetor.'''
-	magnitudeV = magnitude(v)
-	return [x / magnitudeV for x in v]
+	return np.divide(v, magnitude(v))
 
 def normalize_w(v):
 	'''Iguala o atributo w de um vetor P3 a 1 e escala os demais atributos proporcionalmente. Caso w == 0, faz a normalização convencional.'''
 	if eq(v[3], 0):
-		return normalize(v)
+		return np.divide(v, magnitude(v))
 	else:
-		return [v[0] / v[3], v[1] / v[3], v[2] / v[3], 1]
+		return np.divide(v, v[3])
 
 def distance(a, b):
 	'''Distância entre 2 pontos.'''
-	return magnitude(np.subtract(a, b))
+	return magnitude(a - b)
+	# return magnitude(np.subtract(a, b))
 
 def cross_3d(a, b, c):
 	'''Produto cruzado para 3 pontos 4D (o cross do numpy só vai até 3D, então tive que fazer).'''
@@ -40,7 +34,7 @@ def cross_3d(a, b, c):
 	j = np.array([[a[2], a[3], a[0]], [b[2], b[3], b[0]], [c[2], c[3], c[0]]])
 	k = np.array([[a[3], a[0], a[1]], [b[3], b[0], b[1]], [c[3], c[0], c[1]]])
 	l = np.array([a[:-1], b[:-1], c[:-1]])
-	return [LA.det(i), -LA.det(j), LA.det(k), -LA.det(l)]
+	return np.array([LA.det(i), -LA.det(j), LA.det(k), -LA.det(l)])
 
 def row_points_planes(a, b):
 	'''Converte uma reta P3 representada por 2 pontos em sua representação por 2 retas. Também faz o inverso (mas não gera necessariamente os valores anteriores).'''
@@ -99,13 +93,13 @@ def reflex_specular(Ip, ks, L, N, V, n):
 	return Ip * ks * int_pow(np.dot(N, h), n)
 
 def compose_quaternions(q1, q2):
-	output = [q1[0] * q2[0] - prod_r3_r3(q1[1], q2[1])]
-	output.append([a + b + c for a, b, c in zip(prod_vector_scalar(q2[1], q1[0]), prod_vector_scalar(q1[1], q2[0]), np.cross(q1[1], q2[1]))])
+	output = [q1[0] * q2[0] - np.dot(q1[1], q2[1])]
+	output.append([a + b + c for a, b, c in zip(np.dot(q2[1], q1[0]), np.dot(q1[1], q2[0]), np.cross(q1[1], q2[1]))])
 	return output
 
 def rotate(point, q):
 	vxp = np.cross(q[1], point)
-	return [a + 2 * (b + c) for a, b, c in zip(point, prod_vector_scalar(vxp, q[0]), np.cross(q[1], point))]
+	return [a + 2 * (b + c) for a, b, c in zip(point, np.dot(vxp, q[0]), np.cross(q[1], point))]
 
 def to_opencv(img):
 	'''Como o opencv usa (y, x) como ordem das coordenadas e [blue, green, red] como ordem das cores, essa função é usada para converter uma matriz mais "convencional" ara o formato do opencv.'''
@@ -113,12 +107,6 @@ def to_opencv(img):
 	r = np.transpose(r)
 	g = np.transpose(g)
 	b = np.transpose(b)
-	return cv2.merge((b,g,r))
-
-# def showimg(title, img):
-	# '''Ajusta para o sistema de coordenadas do opencv e exibe a imagem na tela.'''
-	# cv2.imshow(title, to_opencv(img))
-
-# def writeimg(name, img):
-	# '''Ajusta para o sistema de coordenadas do opencv e escreve a imagem.'''
-	# cv2.imwrite(name, to_opencv(img))
+	
+	# Sem isso, a imagem da saída fica toda preta
+	return (cv2.merge((b,g,r)) * 255).astype('uint8')
