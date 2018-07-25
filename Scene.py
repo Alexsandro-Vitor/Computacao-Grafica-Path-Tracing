@@ -140,13 +140,13 @@ class Scene:
 						# print(newVector)
 						
 						# Shadow ray
-						# chosenLight = random.choice(self.light)
-						# chosenPoint = random.choice(chosenLight[0].v)
-						# shadowRay = Util.normalize(hitPoint[:-1] - chosenPoint[:-1])
+						#chosenLight = random.choice(self.light)
+						#chosenPoint = random.choice(chosenLight[0].v)
+						#shadowRay = Util.normalize(hitPoint[:-1] - chosenPoint[:-1])
 
 						# Falta fazer a função que selecionará as luzes que são vistar pelo ponto
-						chosenLight = self.light[0].triangle
-						shadowRay = Util.shadow_rays(self.light[0].triangle, hitPoint);
+						chosenLight = self.light[0]
+						shadowRay = Util.shadow_rays(chosenLight[0].v, hitPoint);
 						
 						# if np.dot(normal, shadowRay) < 0:
 							# shadowRay = np.dot(shadowRay, -1)
@@ -154,10 +154,10 @@ class Scene:
 						kChoice = random.random() * np.sum(hitObj[5:8])
 						# Difuso
 						if kChoice < hitObj[5]:
-							colors[path] += Util.reflex_diffuse(chosenLight[4], hitObj[5], shadowRay, normal)
+							colors[path] += Util.reflex_diffuse(chosenLight[1:], hitObj[5], shadowRay, normal)
 						# Especular
 						elif kChoice < hitObj[6] + hitObj[7]:
-							colors[path] += Util.reflex_specular(chosenLight[4], hitObj[6], shadowRay, normal, oldPoint, hitObj[8])
+							colors[path] += Util.reflex_specular(chosenLight[1:], hitObj[6], shadowRay, normal, oldPoint, hitObj[8])
 							
 						# Transparência
 						# else:
@@ -171,6 +171,7 @@ class Scene:
 					if reflex == 0:
 						colors[path, :] = self.background
 					break
+
 			break
 		
 		# print(x)
