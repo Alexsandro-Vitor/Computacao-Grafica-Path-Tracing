@@ -83,7 +83,7 @@ def shadow_rays(light_triangles, point):
 
 def reflex_diffuse(Ip, kd, L, N):
 	'''Reflexão difusa (NÃO TESTADO)'''
-	return Ip * kd * abs(np.dot(L, N)))
+	return np.dot(Ip, kd * abs(np.dot(L, N))))
 
 def int_pow(b, e):
 	'''Potenciação com expoente inteiro (NÃO TESTADO)'''
@@ -99,7 +99,7 @@ def reflex_specular(Ip, ks, L, N, V, n):
 	#h = normalize(np.add(L, V))
 	#return Ip * ks * int_pow(np.dot(N, h), n)
 	R = np.subtract(np.dot(np.dot(2,N), np.dot(N,L)), L)
-	return Ip * ks * int_pow(np.dot(R, V), n)
+	return np.dot(Ip, ks * int_pow(np.dot(R, V), n))
 
 def compose_quaternions(q1, q2):
 	output = [q1[0] * q2[0] - np.dot(q1[1], q2[1])]
