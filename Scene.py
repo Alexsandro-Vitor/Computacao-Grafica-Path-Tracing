@@ -138,26 +138,35 @@ class Scene:
 						newVector = Util.normalize(Util.rotate(normal, qComposed))
 						newVector = np.array([newVector[0], newVector[1], newVector[2], 1])
 						# print(newVector)
-						oldPoint = hitPoint
-						planes = Util.row_points_planes(oldPoint, np.add(hitPoint, newVector))
-						# print(planes)
 						
 						# Shadow ray
-						chosenLight = random.choice(self.light)
-						chosenPoint = random.choice(chosenLight[0].v)
-						shadowRay = Util.normalize(hitPoint[:-1] - chosenPoint[:-1])
+						# chosenLight = random.choice(self.light)
+						# chosenPoint = random.choice(chosenLight[0].v)
+						# shadowRay = Util.normalize(hitPoint[:-1] - chosenPoint[:-1])
+
+						# Falta fazer a função que selecionará as luzes que são vistar pelo ponto
+						chosenLight = self.light[0].triangle
+						shadowRay = Util.shadow_rays(self.light[0].triangle, hitPoint);
+						
 						# if np.dot(normal, shadowRay) < 0:
 							# shadowRay = np.dot(shadowRay, -1)
 						
 						kChoice = random.random() * np.sum(hitObj[5:8])
 						# Difuso
 						if kChoice < hitObj[5]:
-							colors[path] += Util.reflex_diffuse(chosenLight[1:], hitObj[5], shadowRay, normal)
+							colors[path] += Util.reflex_diffuse(chosenLight[4], hitObj[5], shadowRay, normal)
 						# Especular
-						# elif kChoice < hitObj[6] + hitObj[7]:
+						elif kChoice < hitObj[6] + hitObj[7]:
+							colors[path] += Util.reflex_specular(chosenLight[4], hitObj[6], shadowRay, normal, oldPoint, hitObj[8])
 							
 						# Transparência
 						# else:
+						
+						
+						# Atualiza essas variáveis somente no final
+						oldPoint = hitPoint
+						planes = Util.row_points_planes(oldPoint, np.add(hitPoint, newVector))
+						# print(planes)
 				else:
 					if reflex == 0:
 						colors[path, :] = self.background
