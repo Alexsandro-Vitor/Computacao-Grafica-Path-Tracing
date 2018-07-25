@@ -60,7 +60,10 @@ class Scene:
 				output[x, y, :] = self.scale_screen_camera(x, y)
 		return output
 
-	def check_colisions(self, planes):
+	def check_colisions(self, origin, planes):
+		'''Checa se um raio colide com um objeto e obtêm as características dele.'''
+		# origin é o ponto de onde parte o raio
+		
 		# Objeto mais próximo que colidiu com raio e distância
 		hitLight = False	# Colidiu com uma fonte de luz?
 		hitObj = None		# Objeto que colidiu com o raio
@@ -75,9 +78,9 @@ class Scene:
 				point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], solidObj.n[i]))
 				
 				if Util.inside_triangle(solidObj.triangle[i], point):
-					if Util.distance(self.eye, point) < minDist:
+					if Util.distance(origin, point) < minDist:
 						hitObj = solid
-						minDist = Util.distance(self.eye, point)
+						minDist = Util.distance(origin, point)
 						hitPoint = point
 						index = i
 
@@ -88,10 +91,10 @@ class Scene:
 				point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], lightObj.n[i]))
 
 				if Util.inside_triangle(lightObj.triangle[i], point):
-					if Util.distance(self.eye, point) < minDist:
+					if Util.distance(origin, point) < minDist:
 						hitLight = True
 						hitObj = light
-						minDist = Util.distance(self.eye, point)
+						minDist = Util.distance(origin, point)
 						hitPoint = point
 						index = i
 				return (hitLight, hitObj, minDist, hitPoint, index)
@@ -107,7 +110,7 @@ class Scene:
 			oldPoint = self.eye
 			planes = Util.row_points_planes(oldPoint, self.vectors[x, y, :])
 			for reflex in range(3):
-				(hitLight, hitObj, minDist, hitPoint, index) = self.check_colisions(planes)
+				(hitLight, hitObj, minDist, hitPoint, index) = self.check_colisions(oldPoint, planes)
 
 				# Ilumina com a cor do objeto mais próximo
 				if (hitObj != None):
@@ -118,31 +121,41 @@ class Scene:
 						# Ambiente
 						colors[path] += np.dot(hitObj[1:4], self.ambient * hitObj[4])
 						
+						# Raio secundário
+						normal = hitObj[0].n[index][:-1]
+						if np.dot(normal, np.subtract(oldPoint[:-1], hitPoint[:-1])) < 0:
+							normal = np.dot(normal, -1)
+						# print("v:", np.subtract(oldPoint[:-1], hitPoint[:-1]))
+						# print("normal:", normal)
+						phi = math.acos(math.sqrt(random.random()))
+						theta = math.pi * random.random()
+						q1 = [math.cos(phi / 2), np.dot(np.subtract(hitObj[0].triangle[index][0][:-1], hitPoint[:-1]), math.sin(phi / 2))]
+						# print("q1:", q1)
+						q2 = [math.cos(theta), np.dot(normal, math.sin(theta))]
+						# print("q2:", q2)
+						qComposed = Util.compose_quaternions(q2, q1)
+						# print("qComposed:", qComposed)
+						newVector = Util.normalize(Util.rotate(normal, qComposed))
+						newVector = np.array([newVector[0], newVector[1], newVector[2], 1])
+						# print(newVector)
+						oldPoint = hitPoint
+						planes = Util.row_points_planes(oldPoint, np.add(hitPoint, newVector))
+						# print(planes)
+						
+						# Shadow ray
+						chosenLight = random.choice(self.light)
+						chosenPoint = random.choice(chosenLight[0].v)
+						shadowRay = Util.normalize(hitPoint[:-1] - chosenPoint[:-1])
+						# if np.dot(normal, shadowRay) < 0:
+							# shadowRay = np.dot(shadowRay, -1)
+						
 						kChoice = random.random() * np.sum(hitObj[5:8])
 						# Difuso
 						if kChoice < hitObj[5]:
-							normal = hitObj[0].n[index][:-1]
-							if np.dot(normal, np.subtract(oldPoint[:-1], hitPoint[:-1])) < 0:
-								normal = np.dot(normal, -1)
-							# print("v:", np.subtract(oldPoint[:-1], hitPoint[:-1]))
-							# print("normal:", normal)
-							phi = math.acos(math.sqrt(random.random()))
-							theta = math.pi * random.random()
-							q1 = [math.cos(phi / 2), np.dot(np.subtract(hitObj[0].triangle[index][0][:-1], hitPoint[:-1]), math.sin(phi / 2))]
-							# print("q1:", q1)
-							q2 = [math.cos(theta), np.dot(normal, math.sin(theta))]
-							# print("q2:", q2)
-							qComposed = Util.compose_quaternions(q2, q1)
-							# print("qComposed:", qComposed)
-							newVector = Util.normalize(Util.rotate(normal, qComposed))
-							newVector = np.array([newVector[0], newVector[1], newVector[2], 1])
-							# print(newVector)
-							oldPoint = hitPoint
-							planes = Util.row_points_planes(oldPoint, np.add(hitPoint, newVector))
-							# print(planes)
+							colors[path] += Util.reflex_diffuse(chosenLight[1:], hitObj[5], shadowRay, normal)
 						# Especular
 						# elif kChoice < hitObj[6] + hitObj[7]:
-							# shadowRay = 
+							
 						# Transparência
 						# else:
 				else:
@@ -151,7 +164,7 @@ class Scene:
 					break
 			break
 		
-		print(x)
+		# print(x)
 		
 		return colors[0]
 	

@@ -76,7 +76,7 @@ def inside_triangle(t, p):
 
 def reflex_diffuse(Ip, kd, L, N):
 	'''Reflexão difusa (NÃO TESTADO)'''
-	return np.dot(Ip, kd * np.dot(L, N))
+	return np.dot(Ip, kd * abs(np.dot(L, N)))
 
 def int_pow(b, e):
 	'''Potenciação com expoente inteiro (NÃO TESTADO)'''
