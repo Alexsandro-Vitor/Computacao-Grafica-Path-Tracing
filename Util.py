@@ -4,6 +4,7 @@ import numpy as np
 import numpy.linalg as LA
 import functools
 import math
+from random import uniform
 
 def eq(a, b):
 	return abs(a - b) < 0.000001
@@ -73,6 +74,12 @@ def inside_triangle(t, p):
 	hP = (ab + pb + pa) / 2
 	abpA = math.sqrt(abs(hP * (hP - ab) * (hP - pb) * (hP - pa)))
 	return eq(abcA, pbcA + apcA + abpA)
+
+def shadow_rays(light_triangles):
+	x = list(l[0] for l in light_triangles)
+	y = list(l[1] for l in light_triangles)
+	z = list(l[2] for l in light_triangles)
+	retur [uniform(min(x), max(x)), uniform(min(y), max(y)), uniform(min(z), max(z))]
 
 def reflex_diffuse(Ip, kd, L, N):
 	'''Reflexão difusa (NÃO TESTADO)'''
