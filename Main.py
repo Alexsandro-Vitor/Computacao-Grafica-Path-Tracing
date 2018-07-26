@@ -1,8 +1,6 @@
 # -*- encoding: utf-8 -*-
 import numpy as np
 import cv2
-import time
-import random
 
 from tkinter.filedialog import askopenfilename
 
@@ -15,6 +13,7 @@ sceneFile = askopenfilename(filetypes=[("Scene Files","*.sdl")])
 scene = Scene.Scene(sceneFile)
 
 # print(scene)
+print(np.divide(np.array([2, 1, 3]), np.array([1, 2, -3])))
 
 # Execução do path tracing
 img = scene.path_tracing()

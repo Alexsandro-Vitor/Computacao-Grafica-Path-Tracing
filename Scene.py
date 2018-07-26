@@ -1,4 +1,5 @@
 # -*- encoding: utf-8 -*-
+import functools
 import numpy as np
 import math
 import random
@@ -176,16 +177,17 @@ class Scene:
 						colors[path, :] = self.background
 					break
 			
-			#break
+			break
 		
-		# print(x)
+		print(x)
 
-		#return colors[0]
-
-		r = sum(l[0] for l in colors) / len(colors)
-		g = sum(l[1] for l in colors) / len(colors)
-		b = sum(l[2] for l in colors) / len(colors)
-		return [r, g, b]
+		#r = sum(l[0] for l in colors) #/ len(colors)
+		#g = sum(l[1] for l in colors)# / len(colors)
+		#b = sum(l[2] for l in colors)# / len(colors)
+		output = functools.reduce(lambda sum, d: sum+d, colors, np.zeros(3))
+		
+		# Tone mapping
+		return np.divide(output, output + np.repeat(self.tonemapping, 3))
 		
 	def path_tracing(self):
 		'''O código do path tracing vai aqui.'''

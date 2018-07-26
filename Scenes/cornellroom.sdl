@@ -6,7 +6,7 @@
 # do Vinicius 6/12/2005
 
 eye 0.0 0.0 5.7
-size 100 100
+size 50 50
 # size 200 200
 ortho -1 -1 1 1
 background 0.0 1.0 1.0
@@ -16,7 +16,8 @@ ambient 0.5
 light luzcornell.obj 1.0 1.0 1.0 1.0
 
 npaths 10
-tonemapping 1.0
+tonemapping 0.5
+# tonemapping 1.0
 seed 9
 
 # Aqui comeca a definicao das geometrias

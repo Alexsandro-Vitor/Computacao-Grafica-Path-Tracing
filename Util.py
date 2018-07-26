@@ -83,11 +83,11 @@ def shadow_rays(light_triangles, point):
 	return [uniform(min(x), max(x)) - point[0], uniform(min(y), max(y)) - point[1], uniform(min(z), max(z)) - point[2]]
 
 def reflex_diffuse(Ip, kd, L, N):
-	'''Reflexão difusa (NÃO TESTADO)'''
+	'''Reflexão difusa'''
 	return np.dot(Ip, kd * abs(np.dot(L, N)))
 
 def int_pow(b, e):
-	'''Potenciação com expoente inteiro (NÃO TESTADO)'''
+	'''Potenciação com expoente inteiro'''
 	if e == 0:
 		return 1
 	if e % 2:
@@ -98,11 +98,12 @@ def int_pow(b, e):
 def reflex_specular(Ip, ks, L, N, V, n):
 	'''Reflexão especular, com half vector (NÃO TESTADO)'''
 	#h = normalize(np.add(L, V))
-	#return Ip * ks * int_pow(np.dot(N, h), n)
+	#return np.dot(Ip, ks * int_pow(np.dot(N, h), n))
 	R = np.subtract(np.dot(np.dot(2,N), np.dot(N,L)), L)
 	return np.dot(Ip, ks * int_pow(np.dot(R, V), n))
 
 def compose_quaternions(q1, q2):
+	'''Compõe 2 quaternions, gerando um novo que combina ambas as rotações'''
 	output = [q1[0] * q2[0] - np.dot(q1[1], q2[1])]
 	a = np.dot(q1[0], q2[1])
 	b = np.dot(q2[0], q1[1])
@@ -111,6 +112,7 @@ def compose_quaternions(q1, q2):
 	return output
 
 def rotate(point, q):
+	'''Rotaciona um ponto com um quaternion'''
 	a = np.subtract(np.dot(int_pow(q[0], 2), point), np.dot(np.dot(q[1], q[1]), point))
 	b = 2 * np.dot(np.dot(q[1], point), q[1])
 	c = 2 * np.dot(q[0], np.cross(q[1], point))
