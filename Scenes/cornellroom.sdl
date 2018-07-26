@@ -36,10 +36,12 @@ object leftwall.obj 1.0 0.0 0.0 0.3 0.7 0 0 5
 object rightwall.obj 0.0 1.0 0.0 0.3 0.7 0 0 5
 
 # floor GRAY
-object floor.obj 0.5 0.5 0.5 0.3 0.7 0 0 5
+# object floor.obj 0.5 0.5 0.5 0.3 0.7 0 0 5
+textureobject floor.obj Xadrez_4x4.png 0.3 0.7 0 0 5
 
 # back wall WHITE
-object back.obj 1.0 1.0 1.0 0.3 0.7 0 0 5
+# object back.obj 1.0 1.0 1.0 0.3 0.7 0 0 5
+textureobject back.obj Xadrez_8x8.png 0.3 0.7 0 0 5
 
 # ceiling BLUE
 object ceiling.obj 0.0 0.0 1.0 0.3 0.7 0 0 5

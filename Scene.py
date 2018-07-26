@@ -43,11 +43,12 @@ class Scene:
 					self.seed = int(line[1])
 				elif line[0] == "object":
 					newObject = [Object.Object("Objects/" + line[1])]
-					newObject.extend([float(i) for i in line[2:]])
+					newObject.append(np.array([float(i) for i in line[2:5]]))
+					newObject.extend([float(i) for i in line[5:]])
 					self.object.append(newObject)
 				elif line[0] == "textureobject":
 					newObject = [Object.Object("Objects/" + line[1])]
-					newObject.extend(cv2.imread(line[2]))
+					newObject.append(np.divide(np.float32(cv2.imread("Textures/" + line[2])), 255))
 					newObject.extend([float(i) for i in line[3:]])
 					self.textureobject.append(newObject)
 	
@@ -89,7 +90,28 @@ class Scene:
 				
 				if Util.inside_triangle(solidObj.triangle[i], point):
 					if Util.distance(origin, point) < minDist:
-						hitColor = solid[1:4]
+						hitColor = solid[1]
+						hitObj = solid
+						minDist = Util.distance(origin, point)
+						hitPoint = point
+						index = i
+		
+		# Colisões com sólidos com textura
+		for solid in self.textureobject:
+			solidObj = solid[0]
+			for i in range(len(solidObj.triangle)):
+				point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], solidObj.n[i]))
+				
+				if Util.inside_triangle(solidObj.triangle[i], point):
+					if Util.distance(origin, point) < minDist:
+						coords = Util.baricentrical_coords(solidObj.triangle[i], point)
+						print("coords", coords)
+						textureShape = solid[1].shape
+						print("shape", textureShape)
+						coords = [int(coords[0] * textureShape[0]), int(coords[1] * textureShape[1])]
+						print(coords)
+						print(solid[1][coords[0],0])
+						hitColor = solid[1][coords[0], coords[1]]
 						hitObj = solid
 						minDist = Util.distance(origin, point)
 						hitPoint = point
@@ -103,7 +125,7 @@ class Scene:
 
 				if Util.inside_triangle(lightObj.triangle[i], point):
 					if Util.distance(origin, point) < minDist:
-						hitColor = light[1:4]
+						hitColor = light[1]
 						hitLight = True
 						hitObj = light
 						minDist = Util.distance(origin, point)
@@ -135,7 +157,7 @@ class Scene:
 						break
 					else:
 						# Ambiente
-						colors[path] += np.dot(hitColor, self.ambient * hitObj[4])
+						colors[path] += np.dot(hitColor, self.ambient * hitObj[2])
 						
 						# Raio secundário
 						normal = hitObj[0].n[index][:-1]
@@ -156,13 +178,13 @@ class Scene:
 						# if np.dot(normal, shadowRay) < 0:
 							# shadowRay = np.dot(shadowRay, -1)
 						
-						kChoice = random.random() * np.sum(hitObj[5:8])
+						kChoice = random.random() * np.sum(hitObj[3:6])
 						# Difuso
-						if kChoice < hitObj[5]:
-							colors[path] += Util.reflex_diffuse(chosenLight[1:], hitObj[5], shadowRay, normal)
+						if kChoice < hitObj[3]:
+							colors[path] += Util.reflex_diffuse(chosenLight[1:], hitObj[3], shadowRay, normal)
 						# Especular
-						elif kChoice < hitObj[6] + hitObj[7]:
-							colors[path] += Util.reflex_specular(chosenLight[1:], hitObj[6], shadowRay, normal, oldPoint, hitObj[8])
+						elif kChoice < hitObj[4] + hitObj[5]:
+							colors[path] += Util.reflex_specular(chosenLight[1:], hitObj[4], shadowRay, normal, oldPoint, hitObj[8])
 							
 						# Transparência
 						# else:
