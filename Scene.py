@@ -105,12 +105,12 @@ class Scene:
 				if Util.inside_triangle(solidObj.triangle[i], point):
 					if Util.distance(origin, point) < minDist:
 						coords = Util.baricentrical_coords(solidObj.triangle[i], point)
-						print("coords", coords)
+						#print("coords", coords)
 						textureShape = solid[1].shape
-						print("shape", textureShape)
+						#print("shape", textureShape)
 						coords = [int(coords[0] * textureShape[0]), int(coords[1] * textureShape[1])]
-						print(coords)
-						print(solid[1][coords[0],0])
+						#print(coords)
+						#print(solid[1][coords[0],0])
 						hitColor = solid[1][coords[0], coords[1]]
 						hitObj = solid
 						minDist = Util.distance(origin, point)
@@ -161,7 +161,7 @@ class Scene:
 						# Ambiente
 						colors[path] += np.dot(hitColor, self.ambient * hitObj[2])
 						
-						# Raio secundário
+						# Normal
 						normal = hitObj[0].n[index][:-1]
 						if np.dot(normal, np.subtract(oldPoint[:-1], hitPoint[:-1])) < 0:
 							normal = np.dot(normal, -1)
@@ -183,16 +183,17 @@ class Scene:
 						kChoice = random.random() * np.sum(hitObj[3:6])
 						# Difuso
 						if kChoice < hitObj[3]:
-							colors[path] += Util.reflex_diffuse(chosenLight[1:], hitObj[3], shadowRay, normal)
+							# print(" ")
+							colors[path] += Util.reflex_diffuse(chosenLight[1:], np.dot(hitColor, hitObj[3]), shadowRay, normal)
 						# Especular
 						elif kChoice < hitObj[4] + hitObj[5]:
-							colors[path] += Util.reflex_specular(chosenLight[1:], hitObj[4], shadowRay, normal, oldPoint, hitObj[8])
+							colors[path] += Util.reflex_specular(chosenLight[1:], hitObj[4], shadowRay, normal, oldPoint, hitObj[5])
 							
 						# Transparência
 						# else:
 						
 						
-						# Atualiza essas variáveis somente no final
+						# Raio secundário
 						phi = math.acos(math.sqrt(random.random()))
 						theta = math.pi * random.random()
 
@@ -219,7 +220,7 @@ class Scene:
 		output = functools.reduce(lambda sum, d: sum+d, colors, np.zeros(3))
 		
 		# Tone mapping
-		return np.divide(output, output + np.repeat(self.tonemapping, 3))
+		return np.clip(output, 0, 1)#np.divide(output, output + np.repeat(self.tonemapping, 3))
 	
 	def path_tracing(self):
 		'''O código do path tracing vai aqui.'''

@@ -104,7 +104,4 @@ venv.bak/
 .mypy_cache/
 
 # Específico do trabalho
-*.png
-*.bmp
-*.jpg
-*.jpeg
+Results/

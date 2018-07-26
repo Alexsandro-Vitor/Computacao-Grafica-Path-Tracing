@@ -82,7 +82,9 @@ def baricentrical_coords(t, point):
 
 def reflex_diffuse(Ip, kd, L, N):
 	'''Reflexão difusa'''
-	return np.dot(Ip, kd * abs(np.dot(L, N)))
+	output = np.dot([Ip[0] * kd[0], Ip[1] * kd[1], Ip[2] * kd[2]], abs(np.dot(L, N)))
+	print("Ip", Ip, "\nkd", kd, "\nabs(np.dot(L, N))", abs(np.dot(L, N)), "\noutput", output)
+	return output
 
 def int_pow(b, e):
 	'''Potenciação com expoente inteiro'''
