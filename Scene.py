@@ -1,4 +1,5 @@
 # -*- encoding: utf-8 -*-
+import cv2
 import functools
 import multiprocessing as mp
 import numpy as np
@@ -13,6 +14,7 @@ class Scene:
 	def __init__(self, filename):
 		self.light = []
 		self.object = []
+		self.textureobject = []
 		with open(filename) as f:
 			for l in f:
 				line = l[:-1].split(" ")
@@ -43,10 +45,15 @@ class Scene:
 					newObject = [Object.Object("Objects/" + line[1])]
 					newObject.extend([float(i) for i in line[2:]])
 					self.object.append(newObject)
+				elif line[0] == "textureobject":
+					newObject = [Object.Object("Objects/" + line[1])]
+					newObject.extend(cv2.imread(line[2]))
+					newObject.extend([float(i) for i in line[3:]])
+					self.textureobject.append(newObject)
 	
 	def __str__(self):
 		'''Esse metodo é chamado em print(scene).'''
-		return "Scene(\n\toutput = " + self.output + "\n\teye = " + str(self.eye) + "\n\tortho = " + str(self.ortho) + "\n\tsize = " + str(self.size) + "\n\tbackground = " + str(self.background) + "\n\tambient = " + str(self.ambient) + "\n\tlight = " + str(self.light) + "\n\tnpaths = " + str(self.npaths) + "\n\ttonemapping = " + str(self.tonemapping) + "\n\tseed = " + str(self.seed) + "\n\tobject = " + str(self.object) + "\n)"
+		return "Scene(\n\toutput = " + self.output + "\n\teye = " + str(self.eye) + "\n\tortho = " + str(self.ortho) + "\n\tsize = " + str(self.size) + "\n\tbackground = " + str(self.background) + "\n\tambient = " + str(self.ambient) + "\n\tlight = " + str(self.light) + "\n\tnpaths = " + str(self.npaths) + "\n\ttonemapping = " + str(self.tonemapping) + "\n\tseed = " + str(self.seed) + "\n\tobject = " + str(self.object) + "\n\ttextureobject = " + str(self.textureobject) + "\n)"
 	
 	def scale_screen_camera(self, x, y):
 		'''Converte pontos na tela em pontos na cena.'''
@@ -67,6 +74,7 @@ class Scene:
 		# origin é o ponto de onde parte o raio
 		
 		# Objeto mais próximo que colidiu com raio e distância
+		hitColor = None		# Cor do objeto/luz colidido
 		hitLight = False	# Colidiu com uma fonte de luz?
 		hitObj = None		# Objeto que colidiu com o raio
 		minDist = math.inf	# Distancia mínima (já que colide com o objeto mais próximo)
@@ -81,6 +89,7 @@ class Scene:
 				
 				if Util.inside_triangle(solidObj.triangle[i], point):
 					if Util.distance(origin, point) < minDist:
+						hitColor = solid[1:4]
 						hitObj = solid
 						minDist = Util.distance(origin, point)
 						hitPoint = point
@@ -94,13 +103,14 @@ class Scene:
 
 				if Util.inside_triangle(lightObj.triangle[i], point):
 					if Util.distance(origin, point) < minDist:
+						hitColor = light[1:4]
 						hitLight = True
 						hitObj = light
 						minDist = Util.distance(origin, point)
 						hitPoint = point
 						index = i
 		
-		return (hitLight, hitObj, minDist, hitPoint, index)
+		return (hitColor, hitLight, hitObj, minDist, hitPoint, index)
 
 	def trace_path(self, screenCoords):
 		x, y = screenCoords
@@ -115,17 +125,17 @@ class Scene:
 			planes = Util.row_points_planes(oldPoint, self.vectors[x, y, :])
 			
 			for reflex in range(3):
-				(hitLight, hitObj, minDist, hitPoint, index) = self.check_colisions(oldPoint, planes)
+				(hitColor, hitLight, hitObj, minDist, hitPoint, index) = self.check_colisions(oldPoint, planes)
 
 				# Ilumina com a cor do objeto mais próximo
 				if (hitObj != None):
 					if hitLight:
-						colors[path] += hitObj[1:4]
+						colors[path] += hitColor
 						#print(colors)
 						break
 					else:
 						# Ambiente
-						colors[path] += np.dot(hitObj[1:4], self.ambient * hitObj[4])
+						colors[path] += np.dot(hitColor, self.ambient * hitObj[4])
 						
 						# Raio secundário
 						normal = hitObj[0].n[index][:-1]
