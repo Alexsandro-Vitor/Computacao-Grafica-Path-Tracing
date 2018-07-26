@@ -8,21 +8,21 @@ import Scene
 import Object
 import Util
 
-# Pegando o nome do arquivo
-sceneFile = askopenfilename(filetypes=[("Scene Files","*.sdl")])
-scene = Scene.Scene(sceneFile)
+if __name__ == '__main__':
+	# Pegando o nome do arquivo
+	sceneFile = askopenfilename(filetypes=[("Scene Files","*.sdl")])
+	scene = Scene.Scene(sceneFile)
 
-# print(scene)
-print(np.divide(np.array([2, 1, 3]), np.array([1, 2, -3])))
+	# print(scene)
 
-# Execução do path tracing
-img = scene.path_tracing()
+	# Execução do path tracing
+	img = scene.path_tracing()
 
-# Funções do opencv
-img = Util.to_opencv(img)
-
-cv2.imshow("Imagem", img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-cv2.imwrite(scene.output, img)
+	# Funções do opencv
+	img = Util.to_opencv(img)
+	
+	cv2.imshow("Imagem", img)
+	cv2.waitKey(0)
+	cv2.destroyAllWindows()
+	
+	cv2.imwrite(scene.output, img)

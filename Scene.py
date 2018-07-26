@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 import functools
+import multiprocessing as mp
 import numpy as np
 import math
 import random
@@ -101,7 +102,8 @@ class Scene:
 		
 		return (hitLight, hitObj, minDist, hitPoint, index)
 
-	def trace_path(self, x, y):
+	def trace_path(self, screenCoords):
+		x, y = screenCoords
 		'''Traça um raio correspondente às coordenadas x e y da tela.'''
 		
 		# Cores geradas em cada path
@@ -188,7 +190,7 @@ class Scene:
 		
 		# Tone mapping
 		return np.divide(output, output + np.repeat(self.tonemapping, 3))
-		
+	
 	def path_tracing(self):
 		'''O código do path tracing vai aqui.'''
 		self.img = np.zeros([self.size[0], self.size[1], 3])
@@ -197,8 +199,8 @@ class Scene:
 		random.seed(self.seed)
 		totalTime = time.time()
 		
-		for x, y in np.ndindex((self.size[0], self.size[1])):
-			self.img[x, y, :] = self.trace_path(x, y)
+		with mp.Pool() as p:
+			self.img = np.reshape(p.map(self.trace_path, np.ndindex((self.size[0], self.size[1]))), (self.size[0], self.size[1], 3))
 		
 		print("Execução total", time.time() - totalTime)
 		
