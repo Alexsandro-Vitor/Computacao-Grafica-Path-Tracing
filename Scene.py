@@ -118,6 +118,7 @@ class Scene:
 				if (hitObj != None):
 					if hitLight:
 						colors[path] += hitObj[1:4]
+						#print(colors)
 						break
 					else:
 						# Ambiente
@@ -181,9 +182,9 @@ class Scene:
 
 		#return colors[0]
 
-		r = sum(l[0] for l in colors) / (self.npaths * 3)
-		g = sum(l[1] for l in colors) / (self.npaths * 3)
-		b = sum(l[2] for l in colors) / (self.npaths * 3)
+		r = sum(l[0] for l in colors) / len(colors)
+		g = sum(l[1] for l in colors) / len(colors)
+		b = sum(l[2] for l in colors) / len(colors)
 		return [r, g, b]
 		
 	def path_tracing(self):
