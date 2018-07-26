@@ -76,11 +76,6 @@ def inside_triangle(t, p):
 	abpA = math.sqrt(abs(hP * (hP - ab) * (hP - pb) * (hP - pa)))
 	return eq(abcA, pbcA + apcA + abpA)
 
-def baricentrical_coords(t, p):
-	'''Coordenadas baricentricas de um ponto em um triângulo'''
-	abc = triangle_area(t[0], t[1], t[2])
-	return np.array([triangle_area(t[0], t[1], p), triangle_area(t[0], p, t[2]), triangle_area(p, t[1], t[2])]) / abc
-
 def shadow_rays(light_triangles, point):
 	x = list(l[0] for l in light_triangles)
 	y = list(l[1] for l in light_triangles)

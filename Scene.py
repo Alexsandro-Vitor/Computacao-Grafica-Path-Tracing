@@ -1,5 +1,4 @@
 # -*- encoding: utf-8 -*-
-import cv2
 import functools
 import multiprocessing as mp
 import numpy as np
@@ -14,7 +13,6 @@ class Scene:
 	def __init__(self, filename):
 		self.light = []
 		self.object = []
-		self.textureobject = []
 		with open(filename) as f:
 			for l in f:
 				line = l[:-1].split(" ")
@@ -45,16 +43,10 @@ class Scene:
 					newObject = [Object.Object("Objects/" + line[1])]
 					newObject.extend([float(i) for i in line[2:]])
 					self.object.append(newObject)
-				# Objetos com textura
-				elif line[0] == "textureobject":
-					newObject = [Object.Object("Objects/" + line[1])]
-					newObject.extend(cv2.imread("Textures/" + line[2]))
-					newObject.extend([float(i) for i in line[3:]])
-					self.textureobject.append(newObject)
 	
 	def __str__(self):
 		'''Esse metodo é chamado em print(scene).'''
-		return "Scene(\n\toutput = " + self.output + "\n\teye = " + str(self.eye) + "\n\tortho = " + str(self.ortho) + "\n\tsize = " + str(self.size) + "\n\tbackground = " + str(self.background) + "\n\tambient = " + str(self.ambient) + "\n\tlight = " + str(self.light) + "\n\tnpaths = " + str(self.npaths) + "\n\ttonemapping = " + str(self.tonemapping) + "\n\tseed = " + str(self.seed) + "\n\tobject = " + str(self.object) + "\n\ttextureobject = " + str(self.textureobject) + "\n)"
+		return "Scene(\n\toutput = " + self.output + "\n\teye = " + str(self.eye) + "\n\tortho = " + str(self.ortho) + "\n\tsize = " + str(self.size) + "\n\tbackground = " + str(self.background) + "\n\tambient = " + str(self.ambient) + "\n\tlight = " + str(self.light) + "\n\tnpaths = " + str(self.npaths) + "\n\ttonemapping = " + str(self.tonemapping) + "\n\tseed = " + str(self.seed) + "\n\tobject = " + str(self.object) + "\n)"
 	
 	def scale_screen_camera(self, x, y):
 		'''Converte pontos na tela em pontos na cena.'''
@@ -77,7 +69,6 @@ class Scene:
 		# Objeto mais próximo que colidiu com raio e distância
 		hitLight = False	# Colidiu com uma fonte de luz?
 		hitObj = None		# Objeto que colidiu com o raio
-		hitTexture = None	# Colidiu com um objeto com textura?
 		minDist = math.inf	# Distancia mínima (já que colide com o objeto mais próximo)
 		hitPoint = None		# Ponto de colisão
 		index = None		# O índice do triângulo / normal do objeto que colidiu com o raio
@@ -95,20 +86,6 @@ class Scene:
 						hitPoint = point
 						index = i
 
-		# Colisões com sólidos com texturas
-		for solid in self.textureobject:
-			solidObj = solid[0]
-			for i in range(len(solidObj.triangle)):
-				point = Util.normalize_w(Util.cross_3d(planes[0], planes[1], solidObj.n[i]))
-				
-				if Util.inside_triangle(solidObj.triangle[i], point):
-					if Util.distance(origin, point) < minDist:
-						hitTexture = Util.baricentrical_coords(solidObj.triangle[i], point)
-						hitObj = solid
-						minDist = Util.distance(origin, point)
-						hitPoint = point
-						index = i
-
 		# Colisões com luzes
 		for light in self.light:
 			lightObj = light[0]
@@ -117,7 +94,6 @@ class Scene:
 
 				if Util.inside_triangle(lightObj.triangle[i], point):
 					if Util.distance(origin, point) < minDist:
-						hitTexture = None
 						hitLight = True
 						hitObj = light
 						minDist = Util.distance(origin, point)
@@ -145,6 +121,7 @@ class Scene:
 				if (hitObj != None):
 					if hitLight:
 						colors[path] += hitObj[1:4]
+						#print(colors)
 						break
 					else:
 						# Ambiente
