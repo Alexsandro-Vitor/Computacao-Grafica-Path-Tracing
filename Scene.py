@@ -106,21 +106,24 @@ class Scene:
 		x, y = screenCoords
 		'''Traça um raio correspondente às coordenadas x e y da tela.'''
 		
+		jumps = 3
+
 		# Cores geradas em cada path
-		colors = np.zeros((self.npaths, 3))
+		colors = np.zeros((self.npaths, jumps))
 		
 		for path in range(self.npaths):
 			# Planos gerados do raio da camera
 			oldPoint = self.eye
 			planes = Util.row_points_planes(oldPoint, self.vectors[x, y, :])
 			
-			for reflex in range(3):
+			for jump in range(jumps):
 				(hitLight, hitObj, minDist, hitPoint, index) = self.check_colisions(oldPoint, planes)
 
 				# Ilumina com a cor do objeto mais próximo
 				if (hitObj != None):
 					if hitLight:
-						colors[path] += hitObj[1:4]
+						for rbg in range(jumps):
+							colors[path] += hitObj[1:4]
 						#print(colors)
 						break
 					else:
@@ -175,18 +178,19 @@ class Scene:
 						planes = Util.row_points_planes(oldPoint, np.add(hitPoint, newVector))
 						# print(planes)
 				else:
-					if reflex == 0:
-						colors[path, :] = self.background
+					if jump == 0:
+						for rbg in range(jumps):
+							colors[path, :] += self.background
 					break
 			
 			break
 		
-		print(x)
+		#print(x)
 
 		#r = sum(l[0] for l in colors) #/ len(colors)
 		#g = sum(l[1] for l in colors)# / len(colors)
 		#b = sum(l[2] for l in colors)# / len(colors)
-		output = functools.reduce(lambda sum, d: sum+d, colors, np.zeros(3))
+		output = np.divide(functools.reduce(lambda sum, d: sum+d, colors, np.zeros(3)), self.npaths * jumps)
 		
 		# Tone mapping
 		return np.divide(output, output + np.repeat(self.tonemapping, 3))
