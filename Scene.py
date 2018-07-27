@@ -202,7 +202,7 @@ class Scene:
 			print(x)
 
 		# Normalização das cores (usado no lugar do tone mapping porque ele não funcionou bem)
-		output = np.divide(np.clip(functools.reduce(lambda sum, d: sum+d, colors, np.zeros(3)), 0, 1), self.npaths)
+		output = np.clip(np.divide(functools.reduce(lambda sum, d: sum+d, colors, np.zeros(3)), self.npaths), 0, 1)
 		# Tone mapping
 		# np.divide(output, output + np.repeat(self.tonemapping, 3))
 		return output
