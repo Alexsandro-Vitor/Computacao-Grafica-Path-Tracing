@@ -1,11 +1,9 @@
 # -*- encoding: utf-8 -*-
-import numpy as np
 import cv2
 
 from tkinter.filedialog import askopenfilename
 
 import Scene
-import Object
 import Util
 
 if __name__ == '__main__':

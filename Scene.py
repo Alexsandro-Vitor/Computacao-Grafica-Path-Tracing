@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 import cv2
 import functools
-import multiprocessing as mp
+from multiprocessing import Pool
 import numpy as np
 import math
 import random
@@ -47,6 +47,7 @@ class Scene:
 					newObject.extend([float(i) for i in line[5:]])
 					self.object.append(newObject)
 				elif line[0] == "textureobject":
+					# Objetos com texturas usam esse comando, no caso deles, é lida uma imagem e a cor de cada ponto de cada triângulo do objeto será a cor de um ponto da imagem
 					newObject = [Object.Object("Objects/" + line[1])]
 					newObject.append(np.divide(np.float32(cv2.imread("Textures/" + line[2])), 255))
 					newObject.extend([float(i) for i in line[3:]])
@@ -71,11 +72,11 @@ class Scene:
 		return output
 
 	def check_colisions(self, origin, planes):
-		'''Checa se um raio colide com um objeto e obtêm as características dele.'''
+		'''Checa se um raio colide com um objeto ou fonte de luz e obtêm as características dele.'''
 		# origin é o ponto de onde parte o raio
 		
 		# Objeto mais próximo que colidiu com raio e distância
-		hitColor = None		# Cor do objeto/luz colidido
+		hitColor = None		# Cor do ponto do objeto/luz colidido
 		hitLight = False	# Colidiu com uma fonte de luz?
 		hitObj = None		# Objeto que colidiu com o raio
 		minDist = math.inf	# Distancia mínima (já que colide com o objeto mais próximo)
@@ -104,14 +105,12 @@ class Scene:
 				
 				if Util.inside_triangle(solidObj.triangle[i], point):
 					if Util.distance(origin, point) < minDist:
+						# Mapeamento da textura
 						coords = Util.baricentrical_coords(solidObj.triangle[i], point)
-						#print("coords", coords)
 						textureShape = solid[1].shape
-						#print("shape", textureShape)
 						coords = [int(coords[0] * textureShape[0]), int(coords[1] * textureShape[1])]
-						#print(coords)
-						#print(solid[1][coords[0],0])
 						hitColor = solid[1][coords[0], coords[1]]
+						
 						hitObj = solid
 						minDist = Util.distance(origin, point)
 						hitPoint = point
@@ -135,20 +134,20 @@ class Scene:
 		return (hitColor, hitLight, hitObj, minDist, hitPoint, index)
 
 	def trace_path(self, screenCoords):
-		'''Traça um raio correspondente às coordenadas x e y da tela.'''
+		'''Traça o raio correspondente às coordenadas x e y da tela.'''
 		x, y = screenCoords
-		
+
 		# Numero de vezes que o raio vai tentar colidir com um objeto
 		jumps = 3
 
 		# Cores geradas em cada path
 		colors = np.zeros((self.npaths, 3))
-		
+
 		for path in range(self.npaths):
 			# Planos gerados do raio da camera
 			oldPoint = self.eye
 			planes = Util.row_points_planes(oldPoint, self.vectors[x, y, :])
-			
+
 			for jump in range(jumps):
 				(hitColor, hitLight, hitObj, minDist, hitPoint, index) = self.check_colisions(oldPoint, planes)
 
@@ -165,20 +164,11 @@ class Scene:
 						normal = hitObj[0].n[index][:-1]
 						if np.dot(normal, np.subtract(oldPoint[:-1], hitPoint[:-1])) < 0:
 							normal = np.dot(normal, -1)
-						# print("v:", np.subtract(oldPoint[:-1], hitPoint[:-1]))
-						# print("normal:", normal)
 												
 						# Shadow ray
 						chosenLight = random.choice(self.light)
 						chosenPoint = random.choice(chosenLight[0].v)
 						shadowRay = Util.normalize(hitPoint[:-1] - chosenPoint[:-1])
-
-						# Falta fazer a função que selecionará as luzes que são vistar pelo ponto
-						# chosenLight = self.light[0]
-						# shadowRay = Util.shadow_rays(chosenLight[0].v, hitPoint);
-						
-						# if np.dot(normal, shadowRay) < 0:
-							# shadowRay = np.dot(shadowRay, -1)
 						
 						kChoice = random.random() * np.sum(hitObj[3:6])
 						# Difuso
@@ -191,46 +181,41 @@ class Scene:
 							
 						# Transparência
 						# else:
-						
-						
+
 						# Raio secundário
 						phi = math.acos(math.sqrt(random.random()))
 						theta = math.pi * random.random()
 
 						q1 = [math.cos(phi / 2), np.dot(np.subtract(hitObj[0].triangle[index][0][:-1], hitPoint[:-1]), math.sin(phi / 2))]
-						# print("q1:", q1)
 						q2 = [math.cos(theta), np.dot(normal, math.sin(theta))]
-						# print("q2:", q2)
 						qComposed = Util.compose_quaternions(q2, q1)
-						# print("qComposed:", qComposed)
 						newVector = Util.normalize(Util.rotate(normal, qComposed))
 						newVector = np.array([newVector[0], newVector[1], newVector[2], 1])
-						# print(newVector)
 						oldPoint = hitPoint
 						planes = Util.row_points_planes(oldPoint, np.add(hitPoint, newVector))
-						# print(planes)
 				else:
 					if jump == 0:
-						colors[path] += self.background
+						colors[path] = self.background
 					break
-			
-			break
 		
-		#print(x)
-		output = functools.reduce(lambda sum, d: sum+d, colors, np.zeros(3))
-		
+		if y == 0:
+			print(x)
+
+		# Normalização das cores (usado no lugar do tone mapping porque ele não funcionou bem)
+		output = np.divide(np.clip(functools.reduce(lambda sum, d: sum+d, colors, np.zeros(3)), 0, 1), self.npaths)
 		# Tone mapping
-		return np.clip(output, 0, 1)#np.divide(output, output + np.repeat(self.tonemapping, 3))
-	
+		# np.divide(output, output + np.repeat(self.tonemapping, 3))
+		return output
+
 	def path_tracing(self):
 		'''O código do path tracing vai aqui.'''
-		self.img = np.zeros([self.size[0], self.size[1], 3])
 		self.vectors = self.gen_ray_vectors()
-		
+
 		random.seed(self.seed)
 		totalTime = time.time()
-		
-		with mp.Pool() as p:
+
+		with Pool() as p:
+			# A imagem é gerada como um array que é reformado para se tornar a matriz da imagem
 			self.img = np.reshape(p.map(self.trace_path, np.ndindex((self.size[0], self.size[1]))), (self.size[0], self.size[1], 3))
 		
 		print("Execução total", time.time() - totalTime)

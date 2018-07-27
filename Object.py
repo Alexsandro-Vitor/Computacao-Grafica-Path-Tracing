@@ -1,7 +1,6 @@
 # -*- encoding: utf-8 -*-
 import numpy as np
 import Util
-import functools
 
 class Object:
 	def __init__(self, filename):

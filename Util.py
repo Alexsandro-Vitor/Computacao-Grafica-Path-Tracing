@@ -2,9 +2,7 @@
 import cv2
 import numpy as np
 import numpy.linalg as LA
-import functools
 import math
-from random import uniform
 from functools import reduce
 
 def eq(a, b):
@@ -12,7 +10,7 @@ def eq(a, b):
 
 def magnitude(v):
 	'''A norma de um vetor.'''
-	return math.sqrt(functools.reduce((lambda sum, d: sum + d*d), v, 0))
+	return math.sqrt(reduce((lambda sum, d: sum + d*d), v, 0))
 
 def normalize(v):
 	'''Normaliza um vetor.'''
@@ -77,13 +75,13 @@ def inside_triangle(t, p):
 	return eq(abcA, pbcA + apcA + abpA)
 
 def baricentrical_coords(t, point):
+	'''Calcula as coordenadas baricentricas de um ponto em um triângulo (só duas delas porque não preciso da terceira)'''
 	abc = triangle_area(t[0], t[1], t[2])
 	return np.array([triangle_area(t[0], t[1], point), triangle_area(t[0], point, t[2])]) / abc
 
 def reflex_diffuse(Ip, kd, L, N):
 	'''Reflexão difusa'''
 	output = np.dot([Ip[0] * kd[0], Ip[1] * kd[1], Ip[2] * kd[2]], abs(np.dot(L, N)))
-	print("Ip", Ip, "\nkd", kd, "\nabs(np.dot(L, N))", abs(np.dot(L, N)), "\noutput", output)
 	return output
 
 def int_pow(b, e):
@@ -96,7 +94,7 @@ def int_pow(b, e):
 		return int_pow(b * b, e // 2)
 
 def reflex_specular(Ip, ks, L, N, V, n):
-	'''Reflexão especular, com half vector (NÃO TESTADO)'''
+	'''Reflexão especular'''
 	#h = normalize(np.add(L, V))
 	#return np.dot(Ip, ks * int_pow(np.dot(N, h), n))
 	R = np.subtract(np.dot(np.dot(2,N), np.dot(N,L)), L)
